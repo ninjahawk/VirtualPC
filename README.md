@@ -1,4 +1,4 @@
-# virtualpc
+# VirtualPC
 
 *One day, computers used to be built out of silicon wafers the size of your palm, assembled in clean rooms by robots, shipped in cardboard boxes, and explained in thousand-page manuals no one read. That era is long gone. Now you write `nand(a, b)` in Python and a fully functional 8-bit CPU materializes out of pure logic. This repo is a reminder that everything your computer does — every add, every branch, every pixel — traces back to a single humble gate. -@ninjahawk, May 2026.*
 
