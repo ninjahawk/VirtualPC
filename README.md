@@ -1,7 +1,5 @@
 # VirtualPC
 
-*One day, computers used to be built out of silicon wafers the size of your palm, assembled in clean rooms by robots, shipped in cardboard boxes, and explained in thousand-page manuals no one read. That era is long gone. Now you write `nand(a, b)` in Python and a fully functional 8-bit CPU materializes out of pure logic. This repo is a reminder that everything your computer does — every add, every branch, every pixel — traces back to a single humble gate. -@ninjahawk, May 2026.*
-
 The idea: build a real 8-bit computer from the absolute bottom up, starting from a single NAND gate and stacking up through logic gates, an ALU, a CPU, an assembler, and a virtual machine REPL. Memory is backed by a file on disk. Programs are written in a custom assembly language. The AI layer trains a tiny neural network in Python and runs inference natively on the virtual CPU in assembly. You end up with a working machine that can run Pong, compute Fibonacci sequences, and host an AI opponent — all derived from `nand(a, b)`.
 
 ## How it works
