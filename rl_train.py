@@ -143,7 +143,7 @@ if __name__ == '__main__':
         code, origin, labels, errors = assemble(src)
         if errors:
             print("Assembly errors:", errors); sys.exit(1)
-        cpu = CPU(mem)
+        cpu = CPU(mem, turbo=True)
         cpu.load_code(code, origin)
         cpu.PC = origin
         print("Starting (W/S = you  |  right paddle = trained AI  |  Q = quit)\n")
