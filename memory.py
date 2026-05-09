@@ -1,4 +1,7 @@
 # memory.py — 256-byte memory backed entirely by a file on disk (no RAM)
+# The file handle is kept open between operations so we pay seek cost
+# rather than open/close cost on every access — the data still lives on
+# disk and every read/write goes directly to the file.
 
 import os
 
@@ -10,16 +13,16 @@ class Memory:
         if not os.path.exists(path):
             with open(path, 'wb') as f:
                 f.write(bytes(SIZE))
+        self._fh = open(path, 'r+b')
 
     def read(self, addr):
-        with open(self.path, 'rb') as f:
-            f.seek(addr & 0xFF)
-            return f.read(1)[0]
+        self._fh.seek(addr & 0xFF)
+        return self._fh.read(1)[0]
 
     def write(self, addr, value):
-        with open(self.path, 'r+b') as f:
-            f.seek(addr & 0xFF)
-            f.write(bytes([value & 0xFF]))
+        self._fh.seek(addr & 0xFF)
+        self._fh.write(bytes([value & 0xFF]))
+        self._fh.flush()
 
     def load(self, data, start=0):
         for i, byte in enumerate(data):
@@ -27,8 +30,9 @@ class Memory:
                 self.write(start + i, byte)
 
     def reset(self):
-        with open(self.path, 'wb') as f:
-            f.write(bytes(SIZE))
+        self._fh.seek(0)
+        self._fh.write(bytes(SIZE))
+        self._fh.flush()
 
     def dump(self, start=0, length=256):
         length = min(length, SIZE - start)

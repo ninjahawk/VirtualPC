@@ -2,14 +2,19 @@
 
 from gates import and_gate, or_gate, xor_gate, not_gate
 
+# Precompute bit representations for all 256 byte values so int_to_bits
+# never allocates a new list at runtime — the NAND gates still do all the
+# actual computation, this just removes the Python list overhead around them.
+_INT_TO_BITS = tuple(tuple((n >> i) & 1 for i in range(8)) for n in range(256))
+
 def int_to_bits(n, width=8):
     """Integer → [LSB, ..., MSB]"""
-    n = int(n) & ((1 << width) - 1)
-    return [(n >> i) & 1 for i in range(width)]
+    return _INT_TO_BITS[int(n) & 0xFF]
 
 def bits_to_int(bits):
     """[LSB, ..., MSB] → integer"""
-    return sum(b << i for i, b in enumerate(bits))
+    return (bits[0] | bits[1]<<1 | bits[2]<<2 | bits[3]<<3 |
+            bits[4]<<4 | bits[5]<<5 | bits[6]<<6 | bits[7]<<7)
 
 def half_adder(a, b):
     return xor_gate(a, b), and_gate(a, b)          # sum, carry
@@ -56,12 +61,12 @@ def dec8(a):  return sub8(a, 1)
 def shl8(a):
     bits = int_to_bits(a)
     carry = bits[7]
-    return bits_to_int([0] + bits[:7]), carry       # shift left, LSB=0
+    return bits_to_int((0,) + bits[:7]), carry      # shift left, LSB=0
 
 def shr8(a):
     bits = int_to_bits(a)
     carry = bits[0]
-    return bits_to_int(bits[1:] + [0]), carry       # shift right, MSB=0
+    return bits_to_int(bits[1:] + (0,)), carry      # shift right, MSB=0
 
 def mul8(a, b):
     """Signed 8-bit × 8-bit → signed 8-bit (saturated).

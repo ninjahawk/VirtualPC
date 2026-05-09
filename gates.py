@@ -1,7 +1,6 @@
 # gates.py — all logic derived from NAND (NAND is functionally complete)
 
 def nand(a, b):
-    a, b = int(bool(a)), int(bool(b))
     return 0 if (a and b) else 1
 
 def not_gate(a):       return nand(a, a)
