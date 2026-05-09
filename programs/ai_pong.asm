@@ -290,6 +290,7 @@ rst_xy:
 
 redraw:
     DRAW
+    WAIT
     JMP loop
 
 done:

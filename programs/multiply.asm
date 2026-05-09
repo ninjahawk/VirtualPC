@@ -1,48 +1,51 @@
-; multiply.asm — multiply two numbers via repeated addition
-; 6 * 7 = 42
-; $80 = multiplicand (6), $81 = multiplier (7, loop counter), $82 = result
+; multiply.asm — read two numbers from the user, print the product.
+; Uses the gate-level MUL opcode (mul8 in alu.py = shift-and-add via NAND).
+; Result wraps mod 256 since registers are 8-bit.
 .org $00
-    LDA #6
-    STA $80       ; a = 6
-    LDA #7
-    STA $81       ; b = 7 (loop counter)
-    LDA #0
-    STA $82       ; result = 0
+    LDA #$66      ; 'f'
+    OUT
+    LDA #$69      ; 'i'
+    OUT
+    LDA #$72      ; 'r'
+    OUT
+    LDA #$73      ; 's'
+    OUT
+    LDA #$74      ; 't'
+    OUT
+    LDA #$3A      ; ':'
+    OUT
+    LDA #$20      ; ' '
+    OUT
+    INP
+    STA $80       ; a = first
 
-loop:
-    LDA $81
-    CMP #0
-    JZ  done      ; if counter == 0, done
+    LDA #$73      ; 's'
+    OUT
+    LDA #$65      ; 'e'
+    OUT
+    LDA #$63      ; 'c'
+    OUT
+    LDA #$6F      ; 'o'
+    OUT
+    LDA #$6E      ; 'n'
+    OUT
+    LDA #$64      ; 'd'
+    OUT
+    LDA #$3A      ; ':'
+    OUT
+    LDA #$20      ; ' '
+    OUT
+    INP           ; A = second
 
-    LDA $82
-    ADD $80
-    STA $82       ; result += a
+    MUL $80       ; A = A * a  (gate-level multiplier)
+    STA $81
 
-    LDA $81
-    SUB #1
-    STA $81       ; counter--
-
-    JMP loop
-
-done:
-    LDA #$36      ; '6'
-    OUT
-    LDA #$20
-    OUT
-    LDA #$2A      ; '*'
-    OUT
-    LDA #$20
-    OUT
-    LDA #$37      ; '7'
-    OUT
-    LDA #$20
-    OUT
     LDA #$3D      ; '='
     OUT
-    LDA #$20
+    LDA #$20      ; ' '
     OUT
-    LDA $82
-    OUTN          ; print result
+    LDA $81
+    OUTN          ; print product
     LDA #$0A
     OUT
     HLT

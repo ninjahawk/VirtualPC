@@ -65,68 +65,99 @@ def mutate(ind):
     return n
 
 def fitness(ind):
-    """Return rate 0–100 from the headless simulator."""
-    _, _, rate = simulate.evaluate(to_int8(ind))
-    return rate
+    """(hits, total, rate) from the headless simulator."""
+    return simulate.evaluate(to_int8(ind))
 
 # ── Training loop ─────────────────────────────────────────────────────────────
 
-def train():
+def train(fast=False, gen_pause=0.6):
     os.makedirs(STATE_DIR, exist_ok=True)
     if SEED is not None:
         random.seed(SEED)
 
     pop = [random_individual() for _ in range(N_POP)]
 
-    best_ind  = None
-    best_rate = -1.0
+    best_ind   = None
+    best_rate  = -1.0
+    best_hits  = 0
+    total_games = 0
+    t_start = time.time()
 
-    W = 20   # progress-bar width
-    header = f"{'Gen':>4}  {'Best%':>6}  {'Avg%':>6}  Progress"
+    W = 24   # progress-bar width
+    header = (f"{'Gen':>3}  {'Best':>11}  {'Avg':>6}  {'Run-best':>8}  "
+              f"{'Progress':<{W+2}}  {'Games':>7}  {'Time':>5}")
     print(header)
-    print("-" * (len(header) + 4))
+    print("-" * len(header))
 
     for gen in range(1, N_GEN + 1):
-        scored = sorted([(fitness(ind), ind) for ind in pop], key=lambda x: -x[0])
+        # Evaluate population with live per-individual updates
+        scored = []
+        for idx, ind in enumerate(pop):
+            hits, total, rate = fitness(ind)
+            scored.append((rate, hits, total, ind))
+            total_games += total
+            # live overwrite line: show each AI as it's scored
+            dots = "#" * (idx + 1) + "." * (N_POP - idx - 1)
+            sys.stdout.write(f"\r  gen {gen:>3}  scoring [{dots}] #{idx+1:>2}: {hits:>2}/{total} ({rate:>5.1f}%)   ")
+            sys.stdout.flush()
 
-        gen_best = scored[0][0]
-        gen_avg  = sum(s for s, _ in scored) / len(scored)
+        scored.sort(key=lambda x: -x[0])
+        gen_best, gen_best_hits, gen_total, _ = scored[0]
+        gen_avg = sum(r for r, _, _, _ in scored) / len(scored)
 
         improved = ""
         if gen_best > best_rate:
             best_rate = gen_best
-            best_ind  = scored[0][1]
-            improved  = "  *"
+            best_hits = gen_best_hits
+            best_ind  = scored[0][3]
+            improved  = "  NEW BEST"
 
         filled = int(gen_best / 100 * W)
         bar    = "#" * filled + "." * (W - filled)
-        print(f"{gen:>4}  {gen_best:>5.1f}%  {gen_avg:>5.1f}%  [{bar}]{improved}")
+        elapsed = time.time() - t_start
+        # clear the live line, then print persistent summary
+        sys.stdout.write("\r" + " " * 78 + "\r")
+        best_col = f"{gen_best_hits:>2}/{gen_total:<2} {gen_best:>4.1f}%"
+        print(
+            f"{gen:>3}  {best_col:>11}  "
+            f"{gen_avg:>5.1f}%  {best_rate:>7.1f}%  [{bar}]  "
+            f"{total_games:>7}  {elapsed:>4.1f}s{improved}"
+        )
+        sys.stdout.flush()
 
         if best_rate >= 100.0:
-            print("\n  Perfect score reached — stopping early.")
+            print("\n  Perfect score on all 36 serve angles — stopping early.")
             break
 
         # Next generation: elites + mutations
-        elites = [ind for _, ind in scored[:N_ELITE]]
+        elites = [ind for _, _, _, ind in scored[:N_ELITE]]
         pop    = list(elites)
         while len(pop) < N_POP:
             pop.append(mutate(random.choice(elites)))
 
-    print(f"\n  Training complete.  Final return rate: {best_rate:.1f}%")
+        if not fast and gen_pause > 0:
+            time.sleep(gen_pause)
+
+    elapsed = time.time() - t_start
+    print(f"\n  Training complete.  Best: {best_hits}/36 ({best_rate:.1f}%)  "
+          f"in {total_games} simulated games over {elapsed:.1f}s")
     return best_ind, best_rate
 
 
 if __name__ == '__main__':
     play_after = '--notplay' not in sys.argv
+    fast       = '--fast' in sys.argv
 
-    print("=" * 52)
+    print("=" * 64)
     print("  VirtualPC - Evolutionary AI Training")
-    print("  Starting from random weights.")
-    print("  Each generation plays simulated games and keeps the best.")
-    print("=" * 52 + "\n")
+    print("  Starting from random weights.  Each AI plays 36 serves;")
+    print("  the best are kept and mutated to seed the next generation.")
+    if not fast:
+        print("  (pass --fast to skip the inter-generation pause)")
+    print("=" * 64 + "\n")
 
     t0 = time.time()
-    best_ind, best_rate = train()
+    best_ind, best_rate = train(fast=fast)
     elapsed = time.time() - t0
 
     mem = Memory(os.path.join(STATE_DIR, 'memory.bin'))

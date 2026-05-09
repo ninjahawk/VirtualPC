@@ -298,7 +298,15 @@ class CPU:
                     row.append(' ')
             lines.append(''.join(row))
         lines.append('#' * W)
-        lines.append('  W/S = P1 (left)    O/L = P2 (right)    Q = quit')
+        # Live AI-training overlay: $F9 = gen, $FA = AI rally wins, $FB = your wins
+        gen     = m.read(0xF9)
+        ai_w    = m.read(0xFA)
+        pl_w    = m.read(0xFB)
+        if gen or ai_w or pl_w:
+            lines.append(f'  W/S = you   Q = quit   |   gen {gen:>3}   '
+                         f'AI {ai_w}-{pl_w} you   (mutating live)')
+        else:
+            lines.append('  W/S = P1 (left)    O/L = P2 (right)    Q = quit')
 
         sys.stdout.write('\033[H' + '\n'.join(lines) + '\n')
         sys.stdout.flush()
