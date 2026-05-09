@@ -32,16 +32,32 @@ def forward(x, W1, b1, W2, b2):
     out = sum(W2[i]*h[i] for i in range(N_HID)) + b2
     return pre, h, out
 
+def _arrival_y(bx, by, dy):
+    """Simulate ball to x=38, return arrival y. Matches assembly physics."""
+    for _ in range(100):
+        bx += 1
+        by_next = by + dy
+        if by_next <= 0 or by_next >= 17:
+            dy = -dy
+            by_next = by_next + dy
+        by = by_next
+        if bx >= 38:
+            return by
+    return by
+
 def make_data(n):
     data = []
     for _ in range(n):
+        ball_x  = random.randint(10, 37)
         ball_y  = random.randint(0, 17)
         p2_y    = random.randint(0, 12)
         ball_dy = random.choice([1, -1])
+        arrive  = _arrival_y(ball_x, ball_y, ball_dy)
         centre  = p2_y + 2
-        diff    = ball_y - centre
+        diff    = arrive - centre
         target  = 1.0 if diff > 0 else (-1.0 if diff < 0 else 0.0)
-        data.append(([float(ball_y >> 1), float(centre >> 1), 1.0 if ball_dy > 0 else 0.0], target))
+        # x0 = arrival_y>>1, x1 = paddle_centre>>1, x2 = dy sign
+        data.append(([float(arrive >> 1), float(centre >> 1), 1.0 if ball_dy > 0 else 0.0], target))
     return data
 
 def train(data):

@@ -70,13 +70,52 @@ chk_q:
     CMP #113
     JZL done
 
-; ---- Neural net inference -------------------------------------------
-    ; x0 = ball_y >> 1  (0-8, matches trainer input range)
+; ---- Predict ball arrival y at x=38 --------------------------------
+; $E6 = frames remaining = 38 - bx
+    LDA #38
+    SUB $F0
+    STA $E6
+
+    LDA $F3
+    CMP #1
+    JNZ pred_up
+
+pred_dn:               ; dy=+1: arrival = by + frames
     LDA $F1
+    ADD $E6
+    STA $E6            ; $E6 = arrival
+    CMP #17
+    JC  pred_ok        ; < 17, done
+    LDA #34            ; reflect off bottom: 34 - arrival
+    SUB $E6
+    STA $E6
+    JMPL pred_ok
+
+pred_up:               ; dy=-1: arrival = by - frames
+    LDA $F1
+    SUB $E6
+    JNC pred_ok2       ; no borrow (by >= frames), result valid
+    LDA $E6            ; borrow: negate -> frames - by
+    SUB $F1
+    STA $E6
+    CMP #17
+    JC  pred_ok        ; < 17, done
+    LDA #34            ; reflect off bottom: 34 - arrival
+    SUB $E6
+    STA $E6
+    JMPL pred_ok
+
+pred_ok2:
+    STA $E6
+pred_ok:
+
+; ---- Neural net inference -------------------------------------------
+    ; x0 = arrival_y >> 1
+    LDA $E6
     SHR
     STA $E0
 
-    ; x1 = (p2_y + 2) >> 1  (1-7, matches trainer input range)
+    ; x1 = (p2_y + 2) >> 1
     LDA $F5
     ADD #2
     SHR

@@ -15,6 +15,7 @@ from memory    import Memory
 from cpu       import CPU
 from assembler import assemble
 import trainer
+import simulate
 
 STATE_DIR = os.path.join(ROOT, '.vpc_state')
 os.makedirs(STATE_DIR, exist_ok=True)
@@ -30,6 +31,9 @@ if trainer.weights_are_trained(mem):
     weights = trainer.load_weights(mem)
     trainer.print_weights(weights)
     print("\n(AI was already trained - brain loaded from disk)")
+    W = [mem.read(0xD0 + i) for i in range(11)]
+    hits, total, rate = simulate.evaluate(W)
+    print(f"\n  AI return rate (simulation): {hits}/{total}  ({rate:.1f}%)  — {simulate.grade(rate)}")
 else:
     print("\nNo saved weights found. Training from scratch...")
     print("(This only happens once)\n")
@@ -41,6 +45,9 @@ else:
     trainer.save_weights(mem, weights)
     print("\nWeights saved to memory.bin - won't need to train again!")
     trainer.print_weights(weights)
+    W = [mem.read(0xD0 + i) for i in range(11)]
+    hits, total, rate = simulate.evaluate(W)
+    print(f"\n  AI return rate (simulation): {hits}/{total}  ({rate:.1f}%)  — {simulate.grade(rate)}")
 
 # -- Assemble and run ----------------------------------------------------------
 with open(os.path.join(ROOT, 'programs', 'ai_pong.asm')) as f:
