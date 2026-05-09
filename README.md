@@ -44,7 +44,11 @@ python run_ai_pong.py
 
 On first run the neural net trains from scratch (takes about a second) and saves weights to `.vpc_state/memory.bin`. On every subsequent run the weights are loaded instantly and the AI plays immediately. The `trainer.py` file is essentially the human's side of this setup — point it at new hyperparameters and let it go.
 
+The AI also keeps learning **while you play**. After every rally a small mutation is applied to the weights; if the AI scored, the mutation is kept, and if you scored, it's reverted. You're literally watching a (1+1) evolutionary strategy run in real time. The bottom HUD shows the current generation and the running tally.
+
 Controls: `W`/`S` = your paddle (left) &nbsp;|&nbsp; right paddle = neural net &nbsp;|&nbsp; `Q` = quit.
+
+For pure evolutionary training from random weights (no gradient pre-seed), run `python rl_train.py`. You'll see each generation's population evaluated live before the survivors mutate into the next generation.
 
 ## Project structure
 
@@ -55,9 +59,29 @@ cpu.py          — CPU, opcode table, fetch-decode-execute cycle
 assembler.py    — two-pass assembler for the custom assembly language
 memory.py       — 256-byte file-backed memory (no RAM)
 vm.py           — REPL entry point
-trainer.py      — neural net trainer (human modifies this)
-run_ai_pong.py  — persistent AI Pong runner
-programs/       — example assembly programs
+trainer.py      — neural net trainer (gradient descent, human modifies this)
+rl_train.py     — evolutionary trainer (random weights -> 100% in seconds)
+simulate.py     — headless AI evaluator (36 deterministic serve angles)
+run_ai_pong.py  — persistent AI Pong runner with live in-game evolution
+programs/       — example assembly programs (see below)
+```
+
+## Example programs
+
+All programs live in `programs/` and can be run with `python vm.py programs/<name>.asm`.
+
+```
+hello.asm        — print "hello, world"
+count.asm        — count 0 to 9
+add.asm          — read two numbers, print their sum (with overflow indicator)
+multiply.asm     — read two numbers, print product (uses gate-level MUL)
+fibonacci.asm    — read n, print the first n Fibonacci numbers
+factorial.asm    — read n, print n! (8-bit; wraps past 5!)
+countdown.asm    — read n, count down to "blastoff!"
+guess.asm        — number guessing game with higher/lower hints
+sierpinski.asm   — Pascal's triangle mod 2, drawn live via gate-level XOR
+pong.asm         — two-player pong (W/S vs O/L)
+ai_pong.asm      — pong with the in-CPU neural net opponent
 ```
 
 ## Design choices
