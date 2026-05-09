@@ -41,7 +41,7 @@ def make_data(n):
         centre  = p2_y + 2
         diff    = ball_y - centre
         target  = 1.0 if diff > 0 else (-1.0 if diff < 0 else 0.0)
-        data.append(([float(ball_y), float(centre), 1.0 if ball_dy > 0 else 0.0], target))
+        data.append(([float(ball_y >> 1), float(centre >> 1), 1.0 if ball_dy > 0 else 0.0], target))
     return data
 
 def train(data):

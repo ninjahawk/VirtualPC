@@ -71,12 +71,12 @@ chk_q:
     JZL done
 
 ; ---- Neural net inference -------------------------------------------
-    ; x0 = ball_y >> 1  (0-8, better precision than >>2)
+    ; x0 = ball_y >> 1  (0-8, matches trainer input range)
     LDA $F1
     SHR
     STA $E0
 
-    ; x1 = (p2_y + 2) >> 1  (1-7)
+    ; x1 = (p2_y + 2) >> 1  (1-7, matches trainer input range)
     LDA $F5
     ADD #2
     SHR
@@ -110,8 +110,6 @@ dy_done:
 rl1:
     LDA #0
 rl1d:
-    SHR
-    SHR
     STA $E3
 
     ; hidden neuron 2
@@ -131,8 +129,6 @@ rl1d:
 rl2:
     LDA #0
 rl2d:
-    SHR
-    SHR
     STA $E4
 
     ; output neuron
