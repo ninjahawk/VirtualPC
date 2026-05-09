@@ -223,19 +223,31 @@ scr1:
     LDA $F6
     ADD #1
     STA $F6
-    JMPL rst
+    LDA #1         ; serve toward AI (dx = +1)
+    STA $F2
+    JMPL rst_dy
 scr2:
     LDA $F7
     ADD #1
     STA $F7
-rst:
+    LDA #255       ; serve toward human (dx = -1)
+    STA $F2
+rst_dy:
+    LDA $F6        ; alternate dy each point: (s1+s2)&1
+    ADD $F7
+    AND #1
+    JZL rst_dn
+    LDA #255       ; dy = -1 (ball goes up)
+    STA $F3
+    JMPL rst_xy
+rst_dn:
+    LDA #1         ; dy = +1 (ball goes down)
+    STA $F3
+rst_xy:
     LDA #19
     STA $F0
     LDA #8
     STA $F1
-    LDA #1
-    STA $F2
-    STA $F3
 
 redraw:
     DRAW
