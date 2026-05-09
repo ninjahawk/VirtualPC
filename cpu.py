@@ -1,30 +1,8 @@
 # cpu.py — 8-bit CPU with fetch-decode-execute cycle
-# All arithmetic goes through the gate-level ALU in alu.py.
-# Pass turbo=True to CPU() to use native Python arithmetic instead —
-# same behaviour, orders of magnitude faster, needed for real-time games.
+# All arithmetic goes through the gate-level ALU in alu.py
 
 from alu import (add8, sub8, and8, or8, xor8, not8, inc8, dec8,
                  shl8, shr8, mul8, int_to_bits)
-
-# ── Turbo (native Python) ALU ─────────────────────────────────────────────────
-def _t_add8(a, b, cin=0):
-    r = (a + b + cin) & 0xFF; return r, 1 if (a + b + cin) > 0xFF else 0
-def _t_sub8(a, b):
-    r = (a - b) & 0xFF; return r, 1 if b > a else 0
-def _t_and8(a, b): return (a & b) & 0xFF
-def _t_or8 (a, b): return (a | b) & 0xFF
-def _t_xor8(a, b): return (a ^ b) & 0xFF
-def _t_not8(a):    return (~a) & 0xFF
-def _t_inc8(a):    return _t_add8(a, 1)
-def _t_dec8(a):    return _t_sub8(a, 1)
-def _t_shl8(a):
-    c = (a >> 7) & 1; return ((a << 1) & 0xFF), c
-def _t_shr8(a):
-    c = a & 1; return (a >> 1) & 0xFF, c
-def _t_mul8(a, b):
-    sa = a if a < 128 else a - 256
-    sb = b if b < 128 else b - 256
-    return max(-128, min(127, sa * sb)) & 0xFF
 
 # ── Opcode table ─────────────────────────────────────────────────────────────
 NOP      = 0x00
@@ -75,7 +53,7 @@ class CPU:
     _CW, _CH      = 40, 18   # court width / game-area height
     _PH           = 5        # paddle height
 
-    def __init__(self, memory, verbose=False, turbo=False):
+    def __init__(self, memory, verbose=False):
         self.mem          = memory
         self.A            = 0
         self.X            = 0
@@ -86,27 +64,10 @@ class CPU:
         self.N            = 0    # negative flag
         self.halted       = False
         self.verbose      = verbose
-        self.turbo        = turbo   # True = native Python arithmetic (fast)
         self.cycles       = 0
         self._display_up  = False
         self.code         = bytearray(65536)
         self.code_end     = 0
-
-        # Select ALU backend at init so step() has no per-op branch
-        if turbo:
-            self._add8 = _t_add8; self._sub8 = _t_sub8
-            self._and8 = _t_and8; self._or8  = _t_or8
-            self._xor8 = _t_xor8; self._not8 = _t_not8
-            self._inc8 = _t_inc8; self._dec8 = _t_dec8
-            self._shl8 = _t_shl8; self._shr8 = _t_shr8
-            self._mul8 = _t_mul8
-        else:
-            self._add8 = add8;  self._sub8 = sub8
-            self._and8 = and8;  self._or8  = or8
-            self._xor8 = xor8;  self._not8 = not8
-            self._inc8 = inc8;  self._dec8 = dec8
-            self._shl8 = shl8;  self._shr8 = shr8
-            self._mul8 = mul8
 
     # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -160,22 +121,22 @@ class CPU:
         elif op == STA_ADDR: self.mem.write(self._fetch(), self.A)
 
         elif op == ADD_IMM:
-            r, c = self._add8(self.A, self._fetch());  self.A = r; self._flags(r, c)
+            r, c = add8(self.A, self._fetch());  self.A = r; self._flags(r, c)
         elif op == ADD_ADDR:
-            r, c = self._add8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r, c)
+            r, c = add8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r, c)
 
         elif op == SUB_IMM:
-            r, b = self._sub8(self.A, self._fetch());  self.A = r; self._flags(r, b)
+            r, b = sub8(self.A, self._fetch());  self.A = r; self._flags(r, b)
         elif op == SUB_ADDR:
-            r, b = self._sub8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r, b)
+            r, b = sub8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r, b)
 
-        elif op == AND_IMM:  self.A = self._and8(self.A, self._fetch());      self._flags(self.A)
-        elif op == AND_ADDR: self.A = self._and8(self.A, self.mem.read(self._fetch())); self._flags(self.A)
-        elif op == OR_IMM:   self.A = self._or8(self.A, self._fetch());       self._flags(self.A)
-        elif op == OR_ADDR:  self.A = self._or8(self.A, self.mem.read(self._fetch()));  self._flags(self.A)
-        elif op == XOR_IMM:  self.A = self._xor8(self.A, self._fetch());      self._flags(self.A)
-        elif op == XOR_ADDR: self.A = self._xor8(self.A, self.mem.read(self._fetch())); self._flags(self.A)
-        elif op == NOT_OP:   self.A = self._not8(self.A);                     self._flags(self.A)
+        elif op == AND_IMM:  self.A = and8(self.A, self._fetch());      self._flags(self.A)
+        elif op == AND_ADDR: self.A = and8(self.A, self.mem.read(self._fetch())); self._flags(self.A)
+        elif op == OR_IMM:   self.A = or8(self.A, self._fetch());       self._flags(self.A)
+        elif op == OR_ADDR:  self.A = or8(self.A, self.mem.read(self._fetch()));  self._flags(self.A)
+        elif op == XOR_IMM:  self.A = xor8(self.A, self._fetch());      self._flags(self.A)
+        elif op == XOR_ADDR: self.A = xor8(self.A, self.mem.read(self._fetch())); self._flags(self.A)
+        elif op == NOT_OP:   self.A = not8(self.A);                     self._flags(self.A)
 
         elif op == JMP_ADDR: self.PC = self._fetch()
         elif op == JZ_ADDR:
@@ -195,9 +156,9 @@ class CPU:
             if self.N: self.PC = addr
 
         elif op == INC_OP:
-            r, c = self._inc8(self.A); self.A = r; self._flags(r, c)
+            r, c = inc8(self.A); self.A = r; self._flags(r, c)
         elif op == DEC_OP:
-            r, b = self._dec8(self.A); self.A = r; self._flags(r)
+            r, b = dec8(self.A); self.A = r; self._flags(r)
 
         elif op == OUT_OP:   print(chr(self.A), end='', flush=True)
         elif op == OUTN_OP:  print(self.A, end='', flush=True)
@@ -207,9 +168,9 @@ class CPU:
         elif op == WAIT_OP:
             import time; time.sleep(0.05)
         elif op == MUL_IMM:
-            r = self._mul8(self.A, self._fetch()); self.A = r; self._flags(r)
+            r = mul8(self.A, self._fetch()); self.A = r; self._flags(r)
         elif op == MUL_ADDR:
-            r = self._mul8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r)
+            r = mul8(self.A, self.mem.read(self._fetch())); self.A = r; self._flags(r)
 
         elif op == JMPL:  self.PC = self._fetch16()
         elif op == JZL:
@@ -255,9 +216,9 @@ class CPU:
         elif op == RET_OP:   self.PC = self._pop()
 
         elif op == SHL_OP:
-            r, c = self._shl8(self.A); self.A = r; self._flags(r, c)
+            r, c = shl8(self.A); self.A = r; self._flags(r, c)
         elif op == SHR_OP:
-            r, c = self._shr8(self.A); self.A = r; self._flags(r, c)
+            r, c = shr8(self.A); self.A = r; self._flags(r, c)
 
         else:
             print(f"\n  [FAULT] Unknown opcode ${op:02X} at PC=${self.PC-1:02X}")

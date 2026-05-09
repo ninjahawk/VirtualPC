@@ -56,7 +56,7 @@ code, origin, labels, errors = assemble(src)
 if errors:
     print("Assembly errors:", errors); sys.exit(1)
 
-cpu = CPU(mem, turbo=True)
+cpu = CPU(mem)
 cpu.load_code(code, origin)
 cpu.PC = origin
 
