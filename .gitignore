@@ -1,5 +1,6 @@
 __pycache__/
 *.pyc
 .vpc_state/
+.fluxstate/
 CLAUDE.md
 .claude/

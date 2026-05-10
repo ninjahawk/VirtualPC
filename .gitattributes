@@ -1,0 +1,5 @@
+# Tell GitHub to recognize .flux files as Flux source code.
+# Flux is a language where programs are training specifications,
+# not instruction sequences. Compilation = gradient descent.
+*.flux linguist-detectable=true
+*.flux linguist-language=Flux
