@@ -510,7 +510,7 @@ def run_script(path: str, interp: Optional['FluxInterpreter'] = None) -> None:
                     except FluxError as e:
                         print(f'  bad example: {el!r}  ({e})')
                 if parsed:
-                    interp.cmd_learn(name, mode='examples', examples=parsed)
+                    interp.cmd_learn(name, mode='examples', examples=parsed, print_fn=print)
                 result = None
         else:
             result = interp.execute(cmd_line)

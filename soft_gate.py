@@ -224,10 +224,15 @@ class GateNetwork:
         """Fraction of examples where all output bits round correctly."""
         if not examples:
             return 0.0
+        n_out = len(self.output_taps)
         ok = 0
         for inputs, targets in examples:
+            if len(targets) != n_out:
+                raise ValueError(
+                    f"Network has {n_out} outputs but example has {len(targets)} targets"
+                )
             outs, _ = self.forward([float(x) for x in inputs])
-            if all(round(o) == int(t) for o, t in zip(outs, targets)):
+            if all(round(outs[i]) == int(targets[i]) for i in range(n_out)):
                 ok += 1
         return ok / len(examples)
 
