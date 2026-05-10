@@ -1,4 +1,14 @@
+<div align="center">
+
 ![VirtualPC](IMG_3133.jpeg)
+
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/ninjahawk/VirtualPC)
+[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](https://github.com/ninjahawk/VirtualPC)
+[![Architecture](https://img.shields.io/badge/architecture-8--bit%20Harvard-blueviolet)](https://github.com/ninjahawk/VirtualPC)
+
+</div>
 
 The idea: build a real 8-bit computer from the absolute bottom up, starting from a single NAND gate and stacking up through logic gates, an ALU, a CPU, an assembler, and a virtual machine REPL. Memory is backed by a file on disk. Programs are written in a custom assembly language. The AI layer trains a tiny neural network in Python and runs inference natively on the virtual CPU in assembly. You end up with a working machine that can run Pong, compute Fibonacci sequences, and host an AI opponent — all derived from `nand(a, b)`.
 
